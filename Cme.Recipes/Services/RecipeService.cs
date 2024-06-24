@@ -95,6 +95,19 @@ namespace Cme.Recipes.Services
             return updatedRecipe;
 
         }
+        public async Task<List<Recipe>> SearchRecipesByNameAsync(string partialName)
+        {
+            return await _context.Recipes
+                .Where(r => EF.Functions.Like(r.Name, $"%{partialName}%"))
+                .ToListAsync();
+        }
+
+        public async Task<List<Recipe>> GetRecipesByCategoryAsync(string category)
+        {
+            return await _context.Recipes
+                .Where(r => r.Category.ToLower() == category.ToLower())
+                .ToListAsync();
+        }
 
     }
 }

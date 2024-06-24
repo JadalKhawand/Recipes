@@ -10,6 +10,8 @@ namespace Cme.Recipes.Services
         Recipe CreateRecipe(RecipeDto recipeDto);
         bool DeleteRecipe(Guid id);
         Recipe UpdateRecipe(Guid id, RecipeDto recipeDto);
+        Task<List<Recipe>> SearchRecipesByNameAsync(string partialName);
+        Task<List<Recipe>> GetRecipesByCategoryAsync(string category);
 
     }
 }

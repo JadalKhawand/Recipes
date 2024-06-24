@@ -111,7 +111,7 @@ namespace Cme.Recipes.Controllers
         }
 
         // update an existing recipe
-        [HttpPut("{id:Guid}")]
+        [HttpPut("{id}")]
         public ActionResult<Recipe> UpdateRecipe(Guid id, RecipeDto recipeDto)
         {
             try
@@ -136,9 +136,45 @@ namespace Cme.Recipes.Controllers
             }
         }
 
+        [HttpGet("{name}")]
+        public async Task<IActionResult> SearchRecipesByName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return BadRequest("search parameter is required.");
+            }
+
+            var recipes = await _recipeService.SearchRecipesByNameAsync(name);
+
+            if (recipes == null || recipes.Count == 0)
+            {
+                return NotFound($"No recipes found with name '{name}'.");
+            }
+
+            return Ok(recipes);
+        }
+
+        [HttpGet("category")]
+        public async Task<IActionResult> GetRecipesByCategory(string category)
+        {
+            if (string.IsNullOrEmpty(category))
+            {
+                return BadRequest("Category parameter is required.");
+            }
+
+            var recipes = await _recipeService.GetRecipesByCategoryAsync(category);
+
+            if (recipes == null || recipes.Count == 0)
+            {
+                return NotFound($"No recipes found in category '{category}'.");
+            }
+
+            return Ok(recipes);
+        }
 
 
     }
+
 }
 
 

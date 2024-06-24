@@ -1,6 +1,6 @@
 using AutoMapper;
 using Microservices.Services.CouponAPI;
-using Microservices.Services.CouponAPI.Data;
+using Cme.Recipes.Data;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;

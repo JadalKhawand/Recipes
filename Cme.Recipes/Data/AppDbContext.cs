@@ -4,7 +4,7 @@ using RecipeApp.Domain.Entities;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 
-namespace Microservices.Services.CouponAPI.Data
+namespace Cme.Recipes.Data
 {
     public class AppDbContext : DbContext
     {

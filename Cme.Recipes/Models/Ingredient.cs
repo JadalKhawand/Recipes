@@ -20,9 +20,11 @@ namespace RecipeApp.Domain.Entities
         public required string Type { get; set; }
 
         [Required]
+        [ForeignKey(nameof(RecipeId))]
+
         public Guid RecipeId { get; set; }
 
-        [ForeignKey(nameof(RecipeId))]
-        public virtual required Recipe Recipe { get; set; }
+
+
     }
 }

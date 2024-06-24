@@ -135,9 +135,8 @@ namespace Cme.Recipes.Controllers
                     "Error updating data");
             }
         }
-
-        [HttpGet("{name}")]
-        public async Task<IActionResult> SearchRecipesByName(string name)
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchRecipesByName([FromQuery] string name)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -153,9 +152,8 @@ namespace Cme.Recipes.Controllers
 
             return Ok(recipes);
         }
-
         [HttpGet("category")]
-        public async Task<IActionResult> GetRecipesByCategory(string category)
+        public async Task<IActionResult> GetRecipesByCategory([FromQuery] string category)
         {
             if (string.IsNullOrEmpty(category))
             {

@@ -37,6 +37,26 @@ namespace Cme.Recipes.Controllers
                     ex.Message);
             }
         }
+        // get all ingredients for a specific recipe
+        [HttpGet("{recipeId:Guid}/ingredients")]
+        public IActionResult GetAllIngredients(Guid recipeId)
+        {
+
+            try
+            {
+                var ingredients = _recipeService.GetIngredients(recipeId);
+
+                if (ingredients == null)
+                    return NotFound();
+
+                return Ok(ingredients);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ex.Message);
+            }
+        }
 
         // get a single recipe by id
         [HttpGet("{id:Guid}")]
@@ -60,7 +80,7 @@ namespace Cme.Recipes.Controllers
 
         //Create a new recipe
         [HttpPost]
-        public ActionResult<Recipe> CreateRecipe([FromBody] RecipeDto recipeDto)
+        public ActionResult<Recipe> CreateRecipe([FromBody] RecipeInputDto recipeDto)
         {
             try
             {
@@ -74,6 +94,29 @@ namespace Cme.Recipes.Controllers
                         "Error creating new recipe");
 
                 return CreatedAtAction(nameof(CreateRecipe), createdRecipe); // 201 Created
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ex.Message);
+            }
+        }
+
+        [HttpPost("{id}/ingredients")]
+        public ActionResult<Recipe> CreateIngredient([FromRoute] Guid id ,[FromBody] List<IngredientInputDto> ingredientDto)
+        {
+            try
+            {
+                if (ingredientDto == null)
+                    return BadRequest();
+
+                var createdIngredient = _recipeService.CreateIngredient(id, ingredientDto);
+
+                if (createdIngredient == null)
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error creating ingredient");
+
+                return CreatedAtAction(nameof(CreateIngredient), createdIngredient); // 201 Created
             }
             catch (Exception ex)
             {
@@ -110,18 +153,18 @@ namespace Cme.Recipes.Controllers
             }
         }
 
-        // update an existing recipe
-        [HttpPut("{id}")]
-        public ActionResult<Recipe> UpdateRecipe(Guid id, RecipeDto recipeDto)
+       /* // update an existing recipe
+        [HttpPut("{RecipeId}/ingredients/{ingredientId}")]
+        public ActionResult<Recipe> UpdateIngredient(Guid RecipeId, IngredientInputDto ingredientInputDto)
         {
             try
             {
-                var recipenToUpdate = _recipeService.GetRecipe(id);
+                var recipenToUpdate = _recipeService.GetRecipe(RecipeId);
 
                 if (recipenToUpdate == null)
-                    return NotFound($"Recipe with Id = {id} not found");
+                    return NotFound($"Recipe with Id = {RecipeId} not found");
 
-                var updatedRecipe = _recipeService.UpdateRecipe(id, recipeDto);
+                var updatedRecipe = _recipeService.UpdateIngredient(RecipeId, ingredientInputDto);
 
                 if (updatedRecipe == null)
                     return StatusCode(StatusCodes.Status500InternalServerError,
@@ -134,41 +177,51 @@ namespace Cme.Recipes.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Error updating data");
             }
-        }
+        }*/
+        
         [HttpGet("search")]
-        public async Task<IActionResult> SearchRecipesByName([FromQuery] string name)
+        public async Task<IActionResult> SearchRecipesByNameAndCategory([FromQuery] string name, [FromQuery] string category)
         {
-            if (string.IsNullOrEmpty(name))
-            {
-                return BadRequest("search parameter is required.");
-            }
+            List<RecipeOutputDto> recipes = null;
 
-            var recipes = await _recipeService.SearchRecipesByNameAsync(name);
+            if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(category))
+            {
+                recipes = await _recipeService.SearchRecipesByNameAndCategory(name, category);
+            }
+            else if (!string.IsNullOrEmpty(name))
+            {
+                recipes = await _recipeService.SearchRecipesByName(name);
+            }
+            else if (!string.IsNullOrEmpty(category))
+            {
+                recipes = await _recipeService.GetRecipesByCategory(category);
+            }
+            else
+            {
+                recipes = _recipeService.GetAllRecipes();
+            }
 
             if (recipes == null || recipes.Count == 0)
             {
-                return NotFound($"No recipes found with name '{name}'.");
+                if (!string.IsNullOrEmpty(name) && string.IsNullOrEmpty(category))
+                {
+                    return NotFound($"No recipes found with name '{name}'.");
+                }
+                else if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(category))
+                {
+                    return NotFound($"No recipes found in category '{category}'.");
+                }
+                else
+                {
+                    return NotFound("No recipes found.");
+                }
             }
 
             return Ok(recipes);
         }
-        [HttpGet("category")]
-        public async Task<IActionResult> GetRecipesByCategory([FromQuery] string category)
-        {
-            if (string.IsNullOrEmpty(category))
-            {
-                return BadRequest("Category parameter is required.");
-            }
 
-            var recipes = await _recipeService.GetRecipesByCategoryAsync(category);
 
-            if (recipes == null || recipes.Count == 0)
-            {
-                return NotFound($"No recipes found in category '{category}'.");
-            }
 
-            return Ok(recipes);
-        }
 
 
     }

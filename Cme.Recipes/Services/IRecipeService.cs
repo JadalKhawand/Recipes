@@ -1,17 +1,21 @@
 ﻿using Cme.Recipes.Models;
 using Cme.Recipes.Models.Dto;
+using RecipeApp.Domain.Entities;
 
 namespace Cme.Recipes.Services
 {
     public interface IRecipeService
     {
-        List<Recipe> GetAllRecipes();
-        Recipe GetRecipe(Guid id);
-        Recipe CreateRecipe(RecipeDto recipeDto);
+        List<RecipeOutputDto> GetAllRecipes();
+        RecipeOutputDto GetRecipe(Guid id);
+        Recipe CreateRecipe(RecipeInputDto recipeDto);
+        List<Ingredient> CreateIngredient(Guid id, List<IngredientInputDto> ingredientInputDto);
         bool DeleteRecipe(Guid id);
-        Recipe UpdateRecipe(Guid id, RecipeDto recipeDto);
-        Task<List<Recipe>> SearchRecipesByNameAsync(string partialName);
-        Task<List<Recipe>> GetRecipesByCategoryAsync(string category);
+        Recipe UpdateRecipe(Guid id, RecipeInputDto recipeDto);
+        Task<List<RecipeOutputDto>> SearchRecipesByName(string partialName);
+        Task<List<RecipeOutputDto>> GetRecipesByCategory(string category);
+        Task<List<RecipeOutputDto>> SearchRecipesByNameAndCategory(string partialName, string category);
+        List<IngredientOutputDto> GetIngredients(Guid RecipeId);
 
     }
 }

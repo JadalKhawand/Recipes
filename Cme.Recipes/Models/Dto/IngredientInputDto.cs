@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Cme.Recipes.Models.Dto
 {
-    public class IngredientDto
+    public class IngredientInputDto
     {
         public required string IngredientName { get; set; }
 

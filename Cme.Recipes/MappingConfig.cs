@@ -11,15 +11,23 @@ namespace Microservices.Services.CouponAPI
         {
             var mappingConfig = new MapperConfiguration(config =>
             {
-                config.CreateMap<RecipeDto, Recipe>()
+                config.CreateMap<RecipeOutputDto, Recipe>()
                     .ForMember(dest => dest.Ingredients, opt => opt.MapFrom(src => src.Ingredients));
 
-                config.CreateMap<Recipe, RecipeDto>()
-                    .ForMember(dest => dest.Ingredients, opt => opt.MapFrom(src => src.Ingredients)); 
+                config.CreateMap<Recipe, RecipeOutputDto>()
+                    .ForMember(dest => dest.Ingredients, opt => opt.MapFrom(src => src.Ingredients));
 
-                config.CreateMap<IngredientDto, Ingredient>();
+                config.CreateMap<Recipe, RecipeInputDto>();
 
-                config.CreateMap<Ingredient, IngredientDto>();
+                config.CreateMap<RecipeInputDto, Recipe>();
+
+                config.CreateMap<IngredientInputDto, Ingredient>();
+
+                config.CreateMap<Ingredient, IngredientInputDto>();
+
+                config.CreateMap<IngredientOutputDto, Ingredient>();
+
+                config.CreateMap<Ingredient, IngredientOutputDto>();
             });
 
             return mappingConfig;

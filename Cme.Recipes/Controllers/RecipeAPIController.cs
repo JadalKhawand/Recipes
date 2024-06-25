@@ -4,6 +4,7 @@ using Cme.Recipes.Services;
 using Cme.Recipes.Models;
 using Cme.Recipes.Models.Dto;
 using static Azure.Core.HttpHeader;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace Cme.Recipes.Controllers
 {
@@ -221,7 +222,38 @@ namespace Cme.Recipes.Controllers
         }
 
 
+        [HttpPatch("{id:Guid}")]
+        public IActionResult UpdateCoupon(Guid id, JsonPatchDocument<RecipeInputDto> recipeDto)
+        {
+            try
+            {
+                var couponToUpdate = _recipeService.GetCoupon(id);
 
+                if (couponToUpdate == null)
+                    return NotFound($"Employee with Id = {id} not found");
+
+                if (recipeDto == null)
+                {
+                    return BadRequest();
+                }
+
+                var coupon = _recipeService.UpdateCoupon(id, recipeDto);
+                if (coupon == false)
+                {
+                    return BadRequest();
+                }
+
+
+                var updatedCoupon = _recipeService.GetCoupon(id);
+
+                return Ok(updatedCoupon);
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+        }
 
 
     }

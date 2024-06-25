@@ -1,5 +1,6 @@
 ﻿using Cme.Recipes.Models;
 using Cme.Recipes.Models.Dto;
+using Microsoft.AspNetCore.JsonPatch;
 using RecipeApp.Domain.Entities;
 
 namespace Cme.Recipes.Services
@@ -16,6 +17,7 @@ namespace Cme.Recipes.Services
         Task<List<RecipeOutputDto>> GetRecipesByCategory(string category);
         Task<List<RecipeOutputDto>> SearchRecipesByNameAndCategory(string partialName, string category);
         List<IngredientOutputDto> GetIngredients(Guid RecipeId);
+        bool UpdateRecipe(Guid id, JsonPatchDocument<RecipeInputDto> patchDto);
 
     }
 }

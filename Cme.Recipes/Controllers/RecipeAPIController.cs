@@ -223,30 +223,30 @@ namespace Cme.Recipes.Controllers
 
 
         [HttpPatch("{id:Guid}")]
-        public IActionResult UpdateCoupon(Guid id, JsonPatchDocument<RecipeInputDto> recipeDto)
+        public IActionResult UpdateRecipe(Guid id, JsonPatchDocument<RecipeInputDto> recipeDto)
         {
             try
             {
-                var couponToUpdate = _recipeService.GetCoupon(id);
+                var recipeToUpdate = _recipeService.GetRecipe(id);
 
-                if (couponToUpdate == null)
-                    return NotFound($"Employee with Id = {id} not found");
+                if (recipeToUpdate == null)
+                    return NotFound($"recipe with Id = {id} not found");
 
                 if (recipeDto == null)
                 {
                     return BadRequest();
                 }
 
-                var coupon = _recipeService.UpdateCoupon(id, recipeDto);
-                if (coupon == false)
+                var recipe = _recipeService.UpdateRecipe(id, recipeDto);
+                if (recipe == false)
                 {
                     return BadRequest();
                 }
 
 
-                var updatedCoupon = _recipeService.GetCoupon(id);
+                var updatedRecipe = _recipeService.GetRecipe(id);
 
-                return Ok(updatedCoupon);
+                return Ok(updatedRecipe);
 
             }
             catch (Exception ex)

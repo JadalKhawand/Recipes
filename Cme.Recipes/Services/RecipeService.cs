@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using RecipeApp.Domain.Entities;
 using static Azure.Core.HttpHeader;
 using System.Net.Mail;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace Cme.Recipes.Services
 {
@@ -196,6 +197,25 @@ namespace Cme.Recipes.Services
                .ToListAsync();
             List<RecipeOutputDto> outputRecipes = _mapper.Map<List<RecipeOutputDto>>(recipes);
             return outputRecipes;
+        }
+        public bool UpdateRecipe(Guid id, JsonPatchDocument<RecipeInputDto> patchDto)
+        {
+            try
+            {
+                var recipe = _context.Recipes.FirstOrDefault(r => r.RecipeId == id);
+                if (recipe == null)
+                    return false;
+
+                var recipeDto = _mapper.Map<RecipeInputDto>(recipe);
+                patchDto.ApplyTo(recipeDto);
+                _mapper.Map(recipeDto, recipe);
+                _context.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
     }

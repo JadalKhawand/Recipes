@@ -15,10 +15,11 @@ namespace Cme.Recipes.Controllers
     public class RecipeAPIController : ControllerBase
     {
         private readonly IRecipeService _recipeService;
-
-        public RecipeAPIController(IRecipeService recipeService)
+        private readonly IFileUploadService _uploadService;
+        public RecipeAPIController(IRecipeService recipeService, IFileUploadService uploadService)
         {
             _recipeService = recipeService;
+            _uploadService = uploadService;
         }
 
         [HttpGet]
@@ -205,31 +206,6 @@ namespace Cme.Recipes.Controllers
             }
         }
 
-       /* // update an existing recipe
-        [HttpPut("{RecipeId}/ingredients/{ingredientId}")]
-        public ActionResult<Recipe> UpdateIngredient(Guid RecipeId, IngredientInputDto ingredientInputDto)
-        {
-            try
-            {
-                var recipenToUpdate = _recipeService.GetRecipe(RecipeId);
-
-                if (recipenToUpdate == null)
-                    return NotFound($"Recipe with Id = {RecipeId} not found");
-
-                var updatedRecipe = _recipeService.UpdateIngredient(RecipeId, ingredientInputDto);
-
-                if (updatedRecipe == null)
-                    return StatusCode(StatusCodes.Status500InternalServerError,
-                        "Error updating data");
-
-                return Ok(updatedRecipe);
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error updating data");
-            }
-        }*/
         
         [HttpGet("filter")]
         public async Task<IActionResult> SearchRecipesByNameAndCategory([FromQuery] string name = "", [FromQuery] string category = "")
@@ -306,7 +282,20 @@ namespace Cme.Recipes.Controllers
             }
         }
 
-        
+        [HttpPost("{recipeId}/upload")]
+        public async Task<IActionResult> UploadImage(Guid recipeId, [FromForm] ImageUploadDto imageUploadDto)
+        {
+            if (imageUploadDto.Image == null)
+                return BadRequest("No image uploaded.");
+
+            var fileName = await _uploadService.UploadImageAsync(recipeId, imageUploadDto.Image);
+
+            if (fileName == null)
+                return StatusCode(500, "An error occurred while uploading the image.");
+
+            return Ok(new { FileName = fileName });
+        }
+
 
 
     }

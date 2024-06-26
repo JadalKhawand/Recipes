@@ -18,6 +18,9 @@ namespace Cme.Recipes.Services
         Task<List<RecipeOutputDto>> SearchRecipesByNameAndCategory(string partialName, string category);
         List<IngredientOutputDto> GetIngredients(Guid RecipeId);
         bool UpdateRecipe(Guid id, JsonPatchDocument<RecipeInputDto> patchDto);
+        Ingredient UpdateIngredient(Guid ingredientId, IngredientInputDto ingredientInputDto);
+        bool DeleteIngredient(Guid id);
+        IngredientOutputDto GetIngredient(Guid ingredientId);
 
     }
 }

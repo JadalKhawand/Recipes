@@ -6,6 +6,7 @@ using Cme.Recipes.Models.Dto;
 using static Azure.Core.HttpHeader;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
+using RecipeApp.Domain.Entities;
 
 namespace Cme.Recipes.Controllers
 {
@@ -104,15 +105,15 @@ namespace Cme.Recipes.Controllers
             }
         }
 
-        [HttpPost("{id}/ingredients")]
-        public ActionResult<Recipe> CreateIngredient([FromRoute] Guid id ,[FromBody] List<IngredientInputDto> ingredientDto)
+        [HttpPost("{recipeId}/ingredients")]
+        public ActionResult<Recipe> CreateIngredient([FromRoute] Guid recipeId ,[FromBody] List<IngredientInputDto> ingredientDto)
         {
             try
             {
                 if (ingredientDto == null)
                     return BadRequest();
 
-                var createdIngredient = _recipeService.CreateIngredient(id, ingredientDto);
+                var createdIngredient = _recipeService.CreateIngredient(recipeId, ingredientDto);
 
                 if (createdIngredient == null)
                     return StatusCode(StatusCodes.Status500InternalServerError,
@@ -124,6 +125,55 @@ namespace Cme.Recipes.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     ex.Message);
+            }
+        }
+        [HttpPut("{recipeId}/ingredients/{ingredientId}")]
+        public ActionResult<Ingredient> UpdateIngredient([FromRoute] Guid recipeId, [FromRoute] Guid ingredientId ,[FromBody] IngredientInputDto ingredientDto)
+        {
+            try
+            {
+                if (ingredientDto == null)
+                    return BadRequest();
+
+                var updatedIngredient = _recipeService.UpdateIngredient(ingredientId, ingredientDto);
+
+                if (updatedIngredient == null)
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error updating ingredient");
+
+                return updatedIngredient;
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ex.Message);
+            }
+        }
+
+        [HttpDelete("{recipeId}/ingredients/{ingredientId}")]
+        public ActionResult<Ingredient> DeleteIngredient([FromRoute] Guid recipeId, [FromRoute] Guid ingredientId)
+        {
+            try
+            {
+                var ingredientToDelete = _recipeService.GetIngredient(ingredientId);
+
+                if (ingredientToDelete == null)
+                {
+                    return NotFound($"Recipe with Id = {ingredientId} not found");
+                }
+
+                var deleteResult = _recipeService.DeleteIngredient(ingredientId);
+
+                if (!deleteResult)
+                {
+                    return BadRequest("Error deleting recipe");
+                }
+
+                return Ok(ingredientToDelete);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 

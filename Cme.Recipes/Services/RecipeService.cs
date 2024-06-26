@@ -56,11 +56,17 @@ namespace Cme.Recipes.Services
         }
 
 
-        public Recipe CreateRecipe(RecipeInputDto recipeInputDto)
+        public Recipe CreateRecipe(RecipeInputDto recipeDto)
         {
-            var recipe = _mapper.Map<Recipe>(recipeInputDto);
+            var recipe = _mapper.Map<Recipe>(recipeDto);
 
             recipe.RecipeId = Guid.NewGuid();
+
+            foreach (var ingredient in recipe.Ingredients)
+            {
+                ingredient.IngredientId = Guid.NewGuid();
+                ingredient.RecipeId = recipe.RecipeId;
+            }
 
             _context.Recipes.Add(recipe);
 
@@ -94,6 +100,15 @@ namespace Cme.Recipes.Services
             return outputIngredients;
         }
 
+        public IngredientOutputDto GetIngredient(Guid ingredientId)
+        {
+            Ingredient ingredient = _context.Ingredients.FirstOrDefault(i => i.IngredientId == ingredientId);
+            if (ingredient == null)
+                throw new Exception("Ingredient isn't found");
+            var outputIngredient = _mapper.Map<IngredientOutputDto>(ingredient);
+            return outputIngredient;
+        }
+        
         public Recipe UpdateRecipe(Guid id, RecipeInputDto recipeDto)
         {
 
@@ -107,70 +122,90 @@ namespace Cme.Recipes.Services
             return updatedRecipe;
 
         }
-        /*
-        public List<Ingredient> UpdateIngredient(Guid id, List<IngredientInputDto> ingredientInputDto)
+        
+        public Ingredient UpdateIngredient(Guid ingredientId, IngredientInputDto ingredientInputDto)
         {
-            var ingredients = GetIngredients(id);
+            var existingIngredient = _context.Ingredients.FirstOrDefault(i=>i.IngredientId == ingredientId);
+            if (existingIngredient == null)
+                return null;
 
-            
+            var updatedIngredient = _mapper.Map(ingredientInputDto, existingIngredient);
+            _context.Ingredients.Update(updatedIngredient);
 
             _context.SaveChangesAsync();
 
-            return ingredients;
+            return updatedIngredient;
         }
-         
-        public async Task<List<Ingredient>> UpdateIngredient(RecipeOutputDto recipe, List<IngredientInputDto> ingredientInputDto)
+
+        public bool DeleteIngredient(Guid id)
         {
-            var existingIngredients = recipe.Ingredients;
-
-            // Update existing ingredients based on ingredientInputDto
-            foreach (var existingIngredient in existingIngredients)
+            try
             {
-                // Find matching ingredientInputDto
-                var dto = ingredientInputDto.FirstOrDefault(i => i.IngredientName == existingIngredient.IngredientId);
-
-                if (dto != null)
-                {
-                    // Update existing ingredient properties
-                    existingIngredient.Name = dto.Name;
-                    existingIngredient.Quantity = dto.Quantity;
-                    existingIngredient.Unit = dto.Unit;
-                    // Add any other properties you need to update
-                }
-                else
-                {
-                    // Ingredient was not found in ingredientInputDto, consider deleting or ignoring it
-                    // For example:
-                    // _context.Ingredients.Remove(existingIngredient);
-                }
+                var ingredient = _context.Ingredients.FirstOrDefault(i => i.IngredientId == id);
+                if (ingredient == null)
+                    return false;
+                _context.Ingredients.Remove(ingredient);
+                _context.SaveChanges();
+                return true;
             }
-
-            // Add new ingredients if any
-            foreach (var dto in ingredientInputDto)
+            catch
             {
-                if (dto.IngredientId == Guid.Empty)
-                {
-                    // This is a new ingredient, create a new Ingredient entity
-                    var newIngredient = new Ingredient
-                    {
-                        IngredientId = Guid.NewGuid(),
-                        RecipeId = id,
-                        Name = dto.Name,
-                        Quantity = dto.Quantity,
-                        Unit = dto.Unit
-                        // Add any other properties as needed
-                    };
-
-                    _context.Ingredients.Add(newIngredient);
-                }
+                return false;
             }
+        }
+        /*
+       public async Task<List<Ingredient>> UpdateIngredient(RecipeOutputDto recipe, List<IngredientInputDto> ingredientInputDto)
+       {
+           var existingIngredients = recipe.Ingredients;
 
-            // Save changes asynchronously
-            await _context.SaveChangesAsync();
+           // Update existing ingredients based on ingredientInputDto
+           foreach (var existingIngredient in existingIngredients)
+           {
+               // Find matching ingredientInputDto
+               var dto = ingredientInputDto.FirstOrDefault(i => i.IngredientName == existingIngredient.IngredientId);
 
-            // Return updated ingredients
-            return existingIngredients;
-        }*/
+               if (dto != null)
+               {
+                   // Update existing ingredient properties
+                   existingIngredient.Name = dto.Name;
+                   existingIngredient.Quantity = dto.Quantity;
+                   existingIngredient.Unit = dto.Unit;
+                   // Add any other properties you need to update
+               }
+               else
+               {
+                   // Ingredient was not found in ingredientInputDto, consider deleting or ignoring it
+                   // For example:
+                   // _context.Ingredients.Remove(existingIngredient);
+               }
+           }
+
+           // Add new ingredients if any
+           foreach (var dto in ingredientInputDto)
+           {
+               if (dto.IngredientId == Guid.Empty)
+               {
+                   // This is a new ingredient, create a new Ingredient entity
+                   var newIngredient = new Ingredient
+                   {
+                       IngredientId = Guid.NewGuid(),
+                       RecipeId = id,
+                       Name = dto.Name,
+                       Quantity = dto.Quantity,
+                       Unit = dto.Unit
+                       // Add any other properties as needed
+                   };
+
+                   _context.Ingredients.Add(newIngredient);
+               }
+           }
+
+           // Save changes asynchronously
+           await _context.SaveChangesAsync();
+
+           // Return updated ingredients
+           return existingIngredients;
+       }*/
 
 
         public async Task<List<RecipeOutputDto>> SearchRecipesByName(string partialName)

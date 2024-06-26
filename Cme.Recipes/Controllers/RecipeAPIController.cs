@@ -181,8 +181,8 @@ namespace Cme.Recipes.Controllers
             }
         }*/
         
-        [HttpGet("search")]
-        public async Task<IActionResult> SearchRecipesByNameAndCategory([FromQuery] string name, [FromQuery] string category)
+        [HttpGet("filter")]
+        public async Task<IActionResult> SearchRecipesByNameAndCategory([FromQuery] string name = "", [FromQuery] string category = "")
         {
             List<RecipeOutputDto> recipes = null;
 

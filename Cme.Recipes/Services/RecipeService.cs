@@ -23,9 +23,7 @@ namespace Cme.Recipes.Services
 
         public List<RecipeOutputDto> GetAllRecipes()
         {
-            List<Recipe> recipes = _context.Recipes
-                .Include(r => r.Ingredients)
-                .ToList();
+            List<Recipe> recipes = _context.Recipes.FromSqlRaw("EXECUTE GetAllRecipes").ToList();
             List<RecipeOutputDto> outputRecipes = _mapper.Map<List<RecipeOutputDto>>(recipes);
 
             return outputRecipes;

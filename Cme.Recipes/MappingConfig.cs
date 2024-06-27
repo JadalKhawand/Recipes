@@ -12,10 +12,12 @@ namespace Microservices.Services.CouponAPI
             var mappingConfig = new MapperConfiguration(config =>
             {
                 config.CreateMap<RecipeOutputDto, Recipe>()
-                    .ForMember(dest => dest.Ingredients, opt => opt.MapFrom(src => src.Ingredients));
+                    .ForMember(dest => dest.Ingredients, opt => opt.MapFrom(src => src.Ingredients))
+                    .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Image));
 
                 config.CreateMap<Recipe, RecipeOutputDto>()
-                    .ForMember(dest => dest.Ingredients, opt => opt.MapFrom(src => src.Ingredients));
+                    .ForMember(dest => dest.Ingredients, opt => opt.MapFrom(src => src.Ingredients))
+                    .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Image));
 
                 config.CreateMap<Recipe, RecipeInputDto>();
 
@@ -28,6 +30,12 @@ namespace Microservices.Services.CouponAPI
                 config.CreateMap<IngredientOutputDto, Ingredient>();
 
                 config.CreateMap<Ingredient, IngredientOutputDto>();
+
+                config.CreateMap<Image,ImageUploadDto>();
+                config.CreateMap<ImageUploadDto, Image>();
+                config.CreateMap<Image,ImageOutputDto>();
+                config.CreateMap<ImageOutputDto, Image>();
+
             });
 
             return mappingConfig;

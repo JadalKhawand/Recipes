@@ -19,7 +19,7 @@ namespace Cme.Recipes.Models
         public required string PrepTime { get; set; }
 
         [Required]
-        public required string Image { get; set; }
+        public required Image Image { get; set; }
 
         [Required]
         public required string Category { get; set; }

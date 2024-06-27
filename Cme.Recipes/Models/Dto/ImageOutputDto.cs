@@ -1,9 +1,7 @@
 ﻿namespace Cme.Recipes.Models.Dto
 {
-    public class ImageUploadDto
+    public class ImageOutputDto
     {
-        public IFormFile Image { get; set; }
-
         public string filepath { get; set; }
 
     }

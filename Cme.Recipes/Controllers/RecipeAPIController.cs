@@ -288,12 +288,12 @@ namespace Cme.Recipes.Controllers
             if (imageUploadDto.Image == null)
                 return BadRequest("No image uploaded.");
 
-            var fileName = await _uploadService.UploadImageAsync(recipeId, imageUploadDto.Image);
+            var image = await _uploadService.UploadImageAsync(recipeId, imageUploadDto.Image);
 
-            if (fileName == null)
+            if (image == null)
                 return StatusCode(500, "An error occurred while uploading the image.");
 
-            return Ok(new { FileName = fileName });
+            return Ok(image);
         }
 
 

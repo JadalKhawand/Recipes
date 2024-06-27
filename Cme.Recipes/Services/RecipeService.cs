@@ -31,6 +31,26 @@ namespace Cme.Recipes.Services
 
         }
 
+        public List<RecipeOutputDto> GetAllRecipesPaginated(int page = 1, int pageSize = 3)
+        {
+            int skipAmount = (page - 1) * pageSize;
+
+            List<Recipe> recipes = _context.Recipes
+                .Include(r => r.Ingredients)
+                .Include(r => r.Image)
+                .Skip(skipAmount)    
+                .Take(pageSize) 
+                .ToList();
+
+            List<RecipeOutputDto> outputRecipes = _mapper.Map<List<RecipeOutputDto>>(recipes);
+
+            return outputRecipes;
+        }
+        public int CountRecipes()
+        {
+            return _context.Recipes.Count();
+        }
+
         public RecipeOutputDto GetRecipe(Guid id)
         {
             var recipe = _context.Recipes.Include(r => r.Ingredients).Include(r => r.Image).FirstOrDefault(u => u.RecipeId == id);

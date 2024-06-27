@@ -7,6 +7,7 @@ using static Azure.Core.HttpHeader;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using RecipeApp.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Cme.Recipes.Controllers
 {
@@ -41,6 +42,39 @@ namespace Cme.Recipes.Controllers
                     ex.Message);
             }
         }
+
+        [HttpGet("{page}")]
+        public IActionResult GetAllRecipes(int page)
+        {
+            try
+            {
+                var pageSize = 3;
+                var recipes = _recipeService.GetAllRecipesPaginated(page, pageSize);
+
+                if (recipes == null || recipes.Count == 0)
+                    return NotFound();
+
+                var totalCount = _recipeService.CountRecipes();
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+                var response = new
+                {
+                    TotalCount = totalCount,
+                    TotalPages = totalPages,
+                    PageSize = pageSize,
+                    Page = page,
+                    Recipes = recipes
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ex.Message);
+            }
+        }
+
         [HttpGet("{recipeId:Guid}/ingredients")]
         public IActionResult GetAllIngredients(Guid recipeId)
         {

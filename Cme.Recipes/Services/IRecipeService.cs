@@ -21,6 +21,8 @@ namespace Cme.Recipes.Services
         Ingredient UpdateIngredient(Guid ingredientId, IngredientInputDto ingredientInputDto);
         bool DeleteIngredient(Guid id);
         IngredientOutputDto GetIngredient(Guid ingredientId);
+        List<RecipeOutputDto> GetAllRecipesPaginated(int page = 1, int pageSize = 3);
+        int CountRecipes();
 
     }
 }

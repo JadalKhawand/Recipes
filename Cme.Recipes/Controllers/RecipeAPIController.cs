@@ -115,30 +115,24 @@ namespace Cme.Recipes.Controllers
         }
 
         [HttpPost]
-        public ActionResult<Recipe> CreateRecipe([FromBody] RecipeInputDto recipeDto)
+        public async Task<ActionResult<Recipe>> CreateRecipe([FromBody] RecipeInputDto recipeDto)
         {
-            try
-            {
-                if (recipeDto == null)
-                    return BadRequest();
 
-                var createdRecipe = _recipeService.CreateRecipe(recipeDto);
+            if (recipeDto == null)
+                return BadRequest();
 
-                if (createdRecipe == null)
-                    return StatusCode(StatusCodes.Status500InternalServerError,
-                        "Error creating new recipe");
+            var createdRecipe = await _recipeService.CreateRecipe(recipeDto);
 
-                return CreatedAtAction(nameof(CreateRecipe), createdRecipe); 
-            }
-            catch (Exception ex)
-            {
+            if (createdRecipe == null)
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    ex.InnerException);
-            }
+                    "Error creating new recipe");
+
+            return CreatedAtAction(nameof(CreateRecipe), createdRecipe);
+
         }
 
         [HttpPost("{recipeId}/ingredients")]
-        public ActionResult<Recipe> CreateIngredient([FromRoute] Guid recipeId ,[FromBody] List<IngredientInputDto> ingredientDto)
+        public ActionResult<Recipe> CreateIngredient([FromRoute] Guid recipeId, [FromBody] List<IngredientInputDto> ingredientDto)
         {
             try
             {
@@ -151,7 +145,7 @@ namespace Cme.Recipes.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError,
                         "Error creating ingredient");
 
-                return CreatedAtAction(nameof(CreateIngredient), createdIngredient); 
+                return CreatedAtAction(nameof(CreateIngredient), createdIngredient);
             }
             catch (Exception ex)
             {
@@ -160,7 +154,7 @@ namespace Cme.Recipes.Controllers
             }
         }
         [HttpPut("{recipeId}/ingredients/{ingredientId}")]
-        public ActionResult<Ingredient> UpdateIngredient([FromRoute] Guid recipeId, [FromRoute] Guid ingredientId ,[FromBody] IngredientInputDto ingredientDto)
+        public ActionResult<Ingredient> UpdateIngredient([FromRoute] Guid recipeId, [FromRoute] Guid ingredientId, [FromBody] IngredientInputDto ingredientDto)
         {
             try
             {
@@ -236,7 +230,7 @@ namespace Cme.Recipes.Controllers
             }
         }
 
-        
+
         [HttpGet("filter")]
         public async Task<IActionResult> SearchRecipesByNameAndCategory([FromQuery] string name = "", [FromQuery] string category = "")
         {
@@ -327,8 +321,9 @@ namespace Cme.Recipes.Controllers
 
                 return Ok(image);
             }
-            
-            catch(Exception ex){
+
+            catch (Exception ex)
+            {
                 return BadRequest(ex.InnerException);
             }
         }

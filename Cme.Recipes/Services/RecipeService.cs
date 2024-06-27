@@ -75,7 +75,7 @@ namespace Cme.Recipes.Services
         }
 
 
-        public Recipe CreateRecipe(RecipeInputDto recipeDto)
+        public async Task<Recipe> CreateRecipe(RecipeInputDto recipeDto)
         {
             var recipe = _mapper.Map<Recipe>(recipeDto);
 
@@ -89,7 +89,7 @@ namespace Cme.Recipes.Services
 
             _context.Recipes.Add(recipe);
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return recipe;
         }

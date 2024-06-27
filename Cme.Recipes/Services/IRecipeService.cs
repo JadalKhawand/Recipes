@@ -9,7 +9,7 @@ namespace Cme.Recipes.Services
     {
         List<RecipeOutputDto> GetAllRecipes();
         RecipeOutputDto GetRecipe(Guid id);
-        Recipe CreateRecipe(RecipeInputDto recipeDto);
+        Task<Recipe> CreateRecipe(RecipeInputDto recipeDto);
         List<Ingredient> CreateIngredient(Guid id, List<IngredientInputDto> ingredientInputDto);
         bool DeleteRecipe(Guid id);
         Recipe UpdateRecipe(Guid id, RecipeInputDto recipeDto);

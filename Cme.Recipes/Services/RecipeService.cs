@@ -50,7 +50,7 @@ namespace Cme.Recipes.Services
                 ingredient.RecipeId = id;
                 _context.Ingredients.Add(ingredient);
             }
-            _context.SaveChangesAsync();
+            _context.SaveChanges();
             return ingredients;
         }
 
@@ -131,7 +131,7 @@ namespace Cme.Recipes.Services
             var updatedIngredient = _mapper.Map(ingredientInputDto, existingIngredient);
             _context.Ingredients.Update(updatedIngredient);
 
-            _context.SaveChangesAsync();
+            _context.SaveChanges();
 
             return updatedIngredient;
         }

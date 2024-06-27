@@ -15,7 +15,7 @@ namespace Cme.Recipes.Models.Dto
 
         public required string PrepTime { get; set; }
 
-        public required ImageUploadDto Image { get; set; }
+        public required ImageOutputDto Image { get; set; }
 
         public required string Category { get; set; }
 

@@ -4,7 +4,6 @@
     {
         public IFormFile Image { get; set; }
 
-        public string filepath { get; set; }
 
     }
 }

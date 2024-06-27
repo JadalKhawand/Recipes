@@ -69,7 +69,7 @@ namespace Cme.Recipes.Services
 
             _context.Recipes.Add(recipe);
 
-            _context.SaveChangesAsync();
+            _context.SaveChanges();
 
             return recipe;
         }

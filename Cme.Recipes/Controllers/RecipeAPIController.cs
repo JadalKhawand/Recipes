@@ -102,7 +102,7 @@ namespace Cme.Recipes.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    ex.Message);
+                    ex.InnerException);
             }
         }
 
@@ -285,15 +285,22 @@ namespace Cme.Recipes.Controllers
         [HttpPost("{recipeId}/upload")]
         public async Task<IActionResult> UploadImage(Guid recipeId, [FromForm] ImageUploadDto imageUploadDto)
         {
-            if (imageUploadDto.Image == null)
-                return BadRequest("No image uploaded.");
+            try
+            {
+                if (imageUploadDto.Image == null)
+                    return BadRequest("No image uploaded.");
 
-            var image = await _uploadService.UploadImageAsync(recipeId, imageUploadDto.Image);
+                var image = await _uploadService.UploadImageAsync(recipeId, imageUploadDto.Image);
 
-            if (image == null)
-                return StatusCode(500, "An error occurred while uploading the image.");
+                if (image == null)
+                    return StatusCode(500, "An error occurred while uploading the image.");
 
-            return Ok(image);
+                return Ok(image);
+            }
+            
+            catch(Exception ex){
+                return BadRequest(ex.InnerException);
+            }
         }
 
 

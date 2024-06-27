@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cme.Recipes", "Cme.Recipes\Cme.Recipes.csproj", "{E4F90985-9AE9-4767-BD0C-75357421A31B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cme.Recipes", "Cme.Recipes\Cme.Recipes.csproj", "{E4F90985-9AE9-4767-BD0C-75357421A31B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CmeRecipe.Test", "CmeRecipeControllerTest\CmeRecipe.Test.csproj", "{57F769CB-4537-47F5-B259-502D82393A37}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{E4F90985-9AE9-4767-BD0C-75357421A31B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E4F90985-9AE9-4767-BD0C-75357421A31B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E4F90985-9AE9-4767-BD0C-75357421A31B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57F769CB-4537-47F5-B259-502D82393A37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57F769CB-4537-47F5-B259-502D82393A37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57F769CB-4537-47F5-B259-502D82393A37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57F769CB-4537-47F5-B259-502D82393A37}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

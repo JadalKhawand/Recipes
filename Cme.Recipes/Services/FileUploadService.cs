@@ -21,36 +21,54 @@ namespace Cme.Recipes.Services
 
         }
 
+        
         public async Task<ImageOutputDto> UploadImageAsync(Guid recipeId, IFormFile file)
         {
             var uploadsDirectory = Path.Combine(_environment.ContentRootPath, "images");
             if (!Directory.Exists(uploadsDirectory))
                 Directory.CreateDirectory(uploadsDirectory);
 
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsDirectory, fileName);
+            var existingImage = await _context.Images.FirstOrDefaultAsync(i => i.RecipeId == recipeId);
 
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            if (existingImage != null)
             {
-                await file.CopyToAsync(fileStream);
+                if (File.Exists(existingImage.filepath))
+                {
+                    File.Delete(existingImage.filepath);
+                }
+
+                existingImage.fileName = file.FileName;
+                existingImage.filepath = Path.Combine(uploadsDirectory, Guid.NewGuid().ToString() + Path.GetExtension(file.FileName));
+                var imageOutput = _mapper.Map<ImageOutputDto>(existingImage);
+                await _context.SaveChangesAsync();
+                return imageOutput;
+            }
+            else
+            {
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                var filePath = Path.Combine(uploadsDirectory, fileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
+
+                var newImage = new Image
+                {
+                    imageId = Guid.NewGuid(),
+                    fileName = file.FileName,
+                    filepath = filePath,
+                    RecipeId = recipeId
+                };
+
+                _context.Images.Add(newImage);
+                await _context.SaveChangesAsync();
+                var imageOutput = _mapper.Map<ImageOutputDto>(newImage);
+                return imageOutput;
+
+
             }
 
-            var image = new Image
-            {
-                imageId = Guid.NewGuid(),
-                fileName  = file.FileName,
-                filepath = filePath,
-                RecipeId = recipeId
-            };
-            var imageOutput = _mapper.Map<ImageOutputDto>(image);
-
-            _context.Images.Add(image);
-            await _context.SaveChangesAsync();
-
-            return imageOutput;
         }
-
-
-
     }
 }

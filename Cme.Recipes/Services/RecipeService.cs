@@ -121,6 +121,10 @@ namespace Cme.Recipes.Services
 
         public IngredientOutputDto GetIngredient(Guid ingredientId)
         {
+            if(ingredientId == Guid.Empty)
+            {
+                throw new Exception("ingredient id is required");
+            }
             Ingredient ingredient = _context.Ingredients.FirstOrDefault(i => i.IngredientId == ingredientId);
             if (ingredient == null)
                 throw new Exception("Ingredient isn't found");
@@ -133,7 +137,7 @@ namespace Cme.Recipes.Services
 
             var existingRecipe = _context.Recipes.FirstOrDefault(c => c.RecipeId == id);
             if (existingRecipe == null)
-                return null;
+                throw new Exception("recipe not found");
 
             var updatedRecipe = _mapper.Map(recipeDto, existingRecipe);
             _context.Recipes.Update(updatedRecipe);
@@ -146,7 +150,7 @@ namespace Cme.Recipes.Services
         {
             var existingIngredient = _context.Ingredients.FirstOrDefault(i=>i.IngredientId == ingredientId);
             if (existingIngredient == null)
-                return null;
+                throw new Exception("recipe not found");
 
             var updatedIngredient = _mapper.Map(ingredientInputDto, existingIngredient);
             _context.Ingredients.Update(updatedIngredient);

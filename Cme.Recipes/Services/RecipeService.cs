@@ -156,7 +156,7 @@ namespace Cme.Recipes.Services
         public async Task<List<RecipeOutputDto>> SearchRecipesByName(string partialName)
         {
             var recipes = await _context.Recipes
-                .Where(r => EF.Functions.Like(r.Name, $"%{partialName}%"))
+                .Where(r => r.Name.ToLower().StartsWith(partialName.ToLower())).Include(r => r.Ingredients).Include(r => r.Image)
                 .ToListAsync();
             List<RecipeOutputDto> outputRecipes = _mapper.Map<List<RecipeOutputDto>>(recipes);
             return outputRecipes;
@@ -165,7 +165,7 @@ namespace Cme.Recipes.Services
         public async Task<List<RecipeOutputDto>> GetRecipesByCategory(string category)
         {
             var recipes = await _context.Recipes
-                .Where(r => r.Category.ToLower() == category.ToLower())
+                .Where(r => r.Category.ToLower() == category.ToLower()).Include(r => r.Ingredients).Include(r => r.Image)
                 .ToListAsync();
             List<RecipeOutputDto> outputRecipes = _mapper.Map<List<RecipeOutputDto>>(recipes);
             return outputRecipes;
@@ -173,7 +173,8 @@ namespace Cme.Recipes.Services
         public async Task<List<RecipeOutputDto>> SearchRecipesByNameAndCategory(string partialName, string category)
         {
             var recipes = await _context.Recipes
-               .Where(r => EF.Functions.Like(r.Name, $"%{partialName}%")&& r.Category.ToLower() == category.ToLower())
+               .Where(r => r.Name.ToLower().StartsWith(partialName.ToLower()) && 
+                r.Category.ToLower() == category.ToLower()).Include(r => r.Ingredients).Include(r => r.Image)
                .ToListAsync();
             List<RecipeOutputDto> outputRecipes = _mapper.Map<List<RecipeOutputDto>>(recipes);
             return outputRecipes;
@@ -197,8 +198,6 @@ namespace Cme.Recipes.Services
                 return false;
             }
         }
-
-        
 
     }
 }

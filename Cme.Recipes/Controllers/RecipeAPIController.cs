@@ -41,7 +41,6 @@ namespace Cme.Recipes.Controllers
                     ex.Message);
             }
         }
-        // get all ingredients for a specific recipe
         [HttpGet("{recipeId:Guid}/ingredients")]
         public IActionResult GetAllIngredients(Guid recipeId)
         {
@@ -62,7 +61,6 @@ namespace Cme.Recipes.Controllers
             }
         }
 
-        // get a single recipe by id
         [HttpGet("{id:Guid}")]
         public IActionResult GetRecipe(Guid id)
         {
@@ -82,7 +80,6 @@ namespace Cme.Recipes.Controllers
             }
         }
 
-        //Create a new recipe
         [HttpPost]
         public ActionResult<Recipe> CreateRecipe([FromBody] RecipeInputDto recipeDto)
         {
@@ -97,7 +94,7 @@ namespace Cme.Recipes.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError,
                         "Error creating new recipe");
 
-                return CreatedAtAction(nameof(CreateRecipe), createdRecipe); // 201 Created
+                return CreatedAtAction(nameof(CreateRecipe), createdRecipe); 
             }
             catch (Exception ex)
             {
@@ -120,7 +117,7 @@ namespace Cme.Recipes.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError,
                         "Error creating ingredient");
 
-                return CreatedAtAction(nameof(CreateIngredient), createdIngredient); // 201 Created
+                return CreatedAtAction(nameof(CreateIngredient), createdIngredient); 
             }
             catch (Exception ex)
             {
@@ -178,7 +175,6 @@ namespace Cme.Recipes.Controllers
             }
         }
 
-        // Delete an existing recipe
         [HttpDelete("{id:Guid}")]
         public ActionResult<Recipe> DeleteRecipe(Guid id)
         {
@@ -302,8 +298,6 @@ namespace Cme.Recipes.Controllers
                 return BadRequest(ex.InnerException);
             }
         }
-
-
 
     }
 

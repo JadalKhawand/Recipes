@@ -20,8 +20,6 @@ namespace Cme.Recipes.Services
             _mapper = mapper;
 
         }
-
-        
         public async Task<ImageOutputDto> UploadImageAsync(Guid recipeId, IFormFile file)
         {
             var uploadsDirectory = Path.Combine(_environment.ContentRootPath, "images");
@@ -66,9 +64,7 @@ namespace Cme.Recipes.Services
                 var imageOutput = _mapper.Map<ImageOutputDto>(newImage);
                 return imageOutput;
 
-
             }
-
         }
     }
 }

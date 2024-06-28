@@ -11,6 +11,8 @@ using Cme.Recipes.Services;
 using Cme.Recipes.Controllers;
 using Cme.Recipes.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
 
 namespace CmeRecipe.Test.Controllers
 {
@@ -23,12 +25,12 @@ namespace CmeRecipe.Test.Controllers
             var fixture = new Fixture();
             fixture.Customize(new AutoNSubstituteCustomization());
 
-            var fakeRecipes = fixture.CreateMany<RecipeOutputDto>(2).ToList();
+            var fakeRecipes = fixture.CreateMany<AllRecipesOutputDto>(3).ToList();
 
 
             var recipeService = Substitute.For<IRecipeService>();
             var FileUploadService = Substitute.For<IFileUploadService>();
-            recipeService.GetAllRecipes().Returns(fakeRecipes);
+            recipeService.GetAllRecipesPaginated(1,3).Returns(fakeRecipes);
 
             var controller = new RecipeAPIController(recipeService,FileUploadService);
 
@@ -42,10 +44,72 @@ namespace CmeRecipe.Test.Controllers
             Assert.Equal(2, count);
         }
 
+        [Fact]
+        public void RecipeApiController_GetAllRecipes_ReturnsNotFound()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            fixture.Customize(new AutoNSubstituteCustomization());
 
+            var fakeRecipes = fixture.CreateMany<AllRecipesOutputDto>(3).ToList();
+
+
+            var recipeService = Substitute.For<IRecipeService>();
+            var FileUploadService = Substitute.For<IFileUploadService>();
+            recipeService.GetAllRecipesPaginated(2, 3).Returns(fakeRecipes);
+
+            var controller = new RecipeAPIController(recipeService, FileUploadService);
+
+            // Act
+            var result = controller.GetAllRecipes();
+
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+        }
+
+        
 
         [Fact]
-        public void RecipeApiController_CreateRecipe_ReturnsActionResult()
+        public async Task RecipeApiController_GetAllRecipes_ReturnsBadRequestForNegativePageSize()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            fixture.Customize(new AutoNSubstituteCustomization());
+
+            var recipeService = Substitute.For<IRecipeService>();
+            var fileUploadService = Substitute.For<IFileUploadService>();
+
+            var controller = new RecipeAPIController(recipeService, fileUploadService);
+
+            // Act
+            var result = await controller.GetAllRecipes(pageNumber: 1, pageSize: -1); 
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task RecipeApiController_GetAllRecipes_ReturnsBadRequestForNegativePageNumber()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            fixture.Customize(new AutoNSubstituteCustomization());
+
+            var recipeService = Substitute.For<IRecipeService>();
+            var fileUploadService = Substitute.For<IFileUploadService>();
+
+            var controller = new RecipeAPIController(recipeService, fileUploadService);
+
+            // Act
+            var result = await controller.GetAllRecipes(pageNumber: -1, pageSize: 10); 
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+    
+
+    [Fact]
+        public async void RecipeApiController_CreateRecipe_ReturnsActionResult()
         {
             // Arrange
             var fixture = new Fixture();
@@ -63,15 +127,34 @@ namespace CmeRecipe.Test.Controllers
 
 
             // Act
-            var result = controller.CreateRecipe(recipeDto);
+            var result = await controller.CreateRecipe(recipeDto);
 
             // Assert
-            Assert.IsType<CreatedAtActionResult>(result.Result);
-            var createdAtActionResult = (CreatedAtActionResult)result.Result;
+            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result.Result);
             Assert.Equal(nameof(RecipeAPIController.CreateRecipe), createdAtActionResult.ActionName);
+            Assert.Equal(StatusCodes.Status201Created, createdAtActionResult.StatusCode);
+            var createdRecipeResult = Assert.IsType<Recipe>(createdAtActionResult.Value);
+
         }
+        [Fact]
+        public async Task RecipeApiController_CreateRecipe_ReturnsBadRequest()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            fixture.Customize(new AutoNSubstituteCustomization());
+
+            var recipeService = Substitute.For<IRecipeService>();
+            var FileUploadService = Substitute.For<IFileUploadService>();
 
 
+            var controller = new RecipeAPIController(recipeService, FileUploadService);
+
+            // Act
+            var result = await controller.CreateRecipe(null);
+
+            // Assert
+            Assert.IsType<BadRequestResult>(result.Result);
+        }
 
         /* [Fact]
          public void RecipeApiController_UpdateRecipe_ReturnsActionResult()
@@ -103,7 +186,7 @@ namespace CmeRecipe.Test.Controllers
          }*/
 
         [Fact]
-        public void RecipeApiController_DeleteRecipe_ReturnsOk()
+        public void RecipeApiController_DeleteRecipe_ReturnsNoContent()
         {
             // Arrange
             var fixture = new Fixture();
@@ -124,9 +207,7 @@ namespace CmeRecipe.Test.Controllers
             var result = controller.DeleteRecipe(id);
 
             // Assert
-            Assert.IsType<OkObjectResult>(result.Result);
-            var okObjectResult = (OkObjectResult)result.Result;
-            Assert.Equal(recipeToDelete, okObjectResult.Value);
+            Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
@@ -149,7 +230,7 @@ namespace CmeRecipe.Test.Controllers
             var result = controller.DeleteRecipe(id);
 
             // Assert
-            Assert.IsType<NotFoundObjectResult>(result.Result);
+            Assert.IsType<NotFoundObjectResult>(result);
         }
 
         [Fact]

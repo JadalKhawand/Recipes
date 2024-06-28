@@ -30,16 +30,7 @@ namespace Cme.Recipes.Services
 
             if (existingImage != null)
             {
-                if (File.Exists(existingImage.filepath))
-                {
-                    File.Delete(existingImage.filepath);
-                }
-
-                existingImage.fileName = file.FileName;
-                existingImage.filepath = Path.Combine(uploadsDirectory, Guid.NewGuid().ToString() + Path.GetExtension(file.FileName));
-                var imageOutput = _mapper.Map<ImageOutputDto>(existingImage);
-                await _context.SaveChangesAsync();
-                return imageOutput;
+                throw new InvalidOperationException("recipe already has an image. You have to delete it first");
             }
             else
             {
@@ -66,5 +57,52 @@ namespace Cme.Recipes.Services
 
             }
         }
+
+        public async Task<bool> DeleteImage(Guid recipeId)
+        {
+            var existingImage = await _context.Images.FirstOrDefaultAsync(i => i.RecipeId == recipeId);
+            if (existingImage != null)
+            {
+                if (File.Exists(existingImage.filepath))
+                {
+                    File.Delete(existingImage.filepath);
+                }
+                _context.Images.Remove(existingImage);
+
+                _context.SaveChanges();
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+        public async Task<ImageOutputDto> UpdateImage(Guid recipeId, IFormFile file)
+        {
+            ImageOutputDto imageOutput = new ImageOutputDto();
+            var uploadsDirectory = Path.Combine(_environment.ContentRootPath, "images");
+            if (!Directory.Exists(uploadsDirectory))
+                Directory.CreateDirectory(uploadsDirectory);
+
+            var existingImage = await _context.Images.FirstOrDefaultAsync(i => i.RecipeId == recipeId);
+
+            if (existingImage != null)
+            {
+                if (File.Exists(existingImage.filepath))
+                {
+                    File.Delete(existingImage.filepath);
+                }
+
+                existingImage.fileName = file.FileName;
+                existingImage.filepath = Path.Combine(uploadsDirectory, Guid.NewGuid().ToString() + Path.GetExtension(file.FileName));
+                imageOutput = _mapper.Map<ImageOutputDto>(existingImage);
+                await _context.SaveChangesAsync();
+            }
+            return imageOutput;
+
+        }
+
     }
 }

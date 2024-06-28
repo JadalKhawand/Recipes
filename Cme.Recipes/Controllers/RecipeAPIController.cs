@@ -23,56 +23,69 @@ namespace Cme.Recipes.Controllers
             _uploadService = uploadService;
         }
 
-        [HttpGet]
-        public IActionResult GetAllRecipes()
+        [HttpGet()]
+        public async Task<IActionResult> GetAllRecipes(string name = "", string category = "", int pageNumber = 1, int pageSize = 3)
         {
-
-            try
+            if (pageNumber <= 0)
             {
-                var recipes = _recipeService.GetAllRecipes();
-
-                if (recipes == null)
-                    return NotFound();
-
-                return Ok(recipes);
+                return BadRequest("pageNumber must be greater than zero.");
             }
-            catch (Exception ex)
+
+            if (pageSize <= 0 || pageSize > 50)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    ex.Message);
+                return BadRequest("pageSize must be between 1 and 50.");
             }
-        }
-
-        [HttpGet("{page}")]
-        public IActionResult GetAllRecipes(int page)
-        {
-            try
+            if(pageSize <= 0 && pageNumber <= 0)
             {
-                var pageSize = 3;
-                var recipes = _recipeService.GetAllRecipesPaginated(page, pageSize);
+                return BadRequest("pageSize and pageNumber must be greater than zero.");
+            }
+            List<AllRecipesOutputDto> recipes = null;
 
-                if (recipes == null || recipes.Count == 0)
-                    return NotFound();
+            if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(category))
+            {
+                recipes = await _recipeService.SearchRecipesByNameAndCategory(name, category, pageNumber, pageSize);
+            }
+            else if (!string.IsNullOrEmpty(name))
+            {
+                recipes = await _recipeService.SearchRecipesByName(name, pageNumber, pageSize);
+            }
+            else if (!string.IsNullOrEmpty(category))
+            {
+                recipes = await _recipeService.GetRecipesByCategory(category, pageNumber, pageSize);
+            }
+            else
+            {
+                recipes = _recipeService.GetAllRecipesPaginated(pageNumber, pageSize);
+            }
 
-                var totalCount = _recipeService.CountRecipes();
-                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-                var response = new
+            if (recipes == null || recipes.Count == 0)
+            {
+                if (!string.IsNullOrEmpty(name) && string.IsNullOrEmpty(category))
                 {
-                    TotalCount = totalCount,
-                    TotalPages = totalPages,
-                    PageSize = pageSize,
-                    Page = page,
-                    Recipes = recipes
-                };
+                    return NotFound($"No recipes found with name '{name}'.");
+                }
+                else if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(category))
+                {
+                    return NotFound($"No recipes found in category '{category}'.");
+                }
+                else
+                {
+                    return NotFound("No recipes found.");
+                }
+            }
+            var totalCount = _recipeService.CountRecipes();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-                return Ok(response);
-            }
-            catch (Exception ex)
+            var response = new
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    ex.Message);
-            }
+                TotalCount = totalCount,
+                TotalPages = totalPages,
+                PageSize = pageSize,
+                Page = pageNumber,
+                Recipes = recipes
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("{recipeId:Guid}/ingredients")]
@@ -132,14 +145,14 @@ namespace Cme.Recipes.Controllers
         }
 
         [HttpPost("{recipeId}/ingredients")]
-        public ActionResult<Recipe> CreateIngredient([FromRoute] Guid recipeId, [FromBody] List<IngredientInputDto> ingredientDto)
+        public async Task<ActionResult<Recipe>> CreateIngredient([FromRoute] Guid recipeId, [FromBody] List<IngredientInputDto> ingredientDto)
         {
             try
             {
                 if (ingredientDto == null)
                     return BadRequest();
 
-                var createdIngredient = _recipeService.CreateIngredient(recipeId, ingredientDto);
+                var createdIngredient = await _recipeService.CreateIngredient(recipeId, ingredientDto);
 
                 if (createdIngredient == null)
                     return StatusCode(StatusCodes.Status500InternalServerError,
@@ -154,30 +167,40 @@ namespace Cme.Recipes.Controllers
             }
         }
         [HttpPut("{recipeId}/ingredients/{ingredientId}")]
-        public ActionResult<Ingredient> UpdateIngredient([FromRoute] Guid recipeId, [FromRoute] Guid ingredientId, [FromBody] IngredientInputDto ingredientDto)
+        public async Task<ActionResult<Ingredient>> UpdateIngredient([FromRoute] Guid recipeId, [FromRoute] Guid ingredientId, [FromBody] IngredientInputDto ingredientDto)
         {
             try
             {
                 if (ingredientDto == null)
+                {
                     return BadRequest();
+                }
 
-                var updatedIngredient = _recipeService.UpdateIngredient(ingredientId, ingredientDto);
+                var existingIngredient = _recipeService.GetIngredient(ingredientId);
+
+                if (existingIngredient == null)
+                {
+                    return NotFound($"Ingredient with ID = {ingredientId} was not found");
+                }
+
+                var updatedIngredient = await _recipeService.UpdateIngredient(ingredientId, ingredientDto);
 
                 if (updatedIngredient == null)
-                    return StatusCode(StatusCodes.Status500InternalServerError,
-                        "Error updating ingredient");
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Error updating ingredient");
+                }
 
                 return updatedIngredient;
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
+
         [HttpDelete("{recipeId}/ingredients/{ingredientId}")]
-        public ActionResult<Ingredient> DeleteIngredient([FromRoute] Guid recipeId, [FromRoute] Guid ingredientId)
+        public async Task<ActionResult<Ingredient>> DeleteIngredient([FromRoute] Guid recipeId, [FromRoute] Guid ingredientId)
         {
             try
             {
@@ -188,14 +211,14 @@ namespace Cme.Recipes.Controllers
                     return NotFound($"Recipe with Id = {ingredientId} not found");
                 }
 
-                var deleteResult = _recipeService.DeleteIngredient(ingredientId);
+                var deleteResult = await _recipeService.DeleteIngredient(ingredientId);
 
                 if (!deleteResult)
                 {
                     return BadRequest("Error deleting recipe");
                 }
 
-                return Ok(ingredientToDelete);
+                return NoContent();
             }
             catch (Exception ex)
             {
@@ -204,7 +227,7 @@ namespace Cme.Recipes.Controllers
         }
 
         [HttpDelete("{id:Guid}")]
-        public ActionResult<Recipe> DeleteRecipe(Guid id)
+        public async Task<ActionResult<Recipe>> DeleteRecipe(Guid id)
         {
             try
             {
@@ -215,14 +238,14 @@ namespace Cme.Recipes.Controllers
                     return NotFound($"Recipe with Id = {id} not found");
                 }
 
-                var deleteResult = _recipeService.DeleteRecipe(id);
+                var deleteResult = await _recipeService.DeleteRecipe(id);
 
                 if (!deleteResult)
                 {
                     return BadRequest("Error deleting recipe");
                 }
 
-                return Ok(recipeToDelete);
+                return NoContent();
             }
             catch (Exception ex)
             {
@@ -231,54 +254,8 @@ namespace Cme.Recipes.Controllers
         }
 
 
-        [HttpGet("filter")]
-        public async Task<IActionResult> SearchRecipesByNameAndCategory([FromQuery] string name = "", [FromQuery] string category = "")
-        {
-            List<RecipeOutputDto> recipes = null;
-            List<AllRecipesOutputDto> outputrecipes = null;
-
-            if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(category))
-            {
-                recipes = await _recipeService.SearchRecipesByNameAndCategory(name, category);
-            }
-            else if (!string.IsNullOrEmpty(name))
-            {
-                recipes = await _recipeService.SearchRecipesByName(name);
-            }
-            else if (!string.IsNullOrEmpty(category))
-            {
-                recipes = await _recipeService.GetRecipesByCategory(category);
-            }
-            else
-            {
-                outputrecipes = _recipeService.GetAllRecipes();
-            }
-
-            if (recipes == null || recipes.Count == 0 || outputrecipes == null)
-            {
-                if (!string.IsNullOrEmpty(name) && string.IsNullOrEmpty(category))
-                {
-                    return NotFound($"No recipes found with name '{name}'.");
-                }
-                else if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(category))
-                {
-                    return NotFound($"No recipes found in category '{category}'.");
-                }
-                else
-                {
-                    return NotFound("No recipes found.");
-                }
-            }
-            if (recipes != null) {
-                return Ok(recipes);
-            }
-
-            return Ok(outputrecipes);
-        }
-
-
         [HttpPatch("{id:Guid}")]
-        public IActionResult UpdateRecipe(Guid id, JsonPatchDocument<RecipeInputDto> recipeDto)
+        public async Task<IActionResult> UpdateRecipe(Guid id, JsonPatchDocument<RecipeInputDto> recipeDto)
         {
             try
             {
@@ -292,7 +269,7 @@ namespace Cme.Recipes.Controllers
                     return BadRequest();
                 }
 
-                var recipe = _recipeService.UpdateRecipe(id, recipeDto);
+                var recipe = await _recipeService.UpdateRecipe(id, recipeDto);
                 if (recipe == false)
                 {
                     return BadRequest();
@@ -310,7 +287,7 @@ namespace Cme.Recipes.Controllers
             }
         }
 
-        [HttpPost("{recipeId}/upload")]
+        [HttpPost("{recipeId}/image")]
         public async Task<IActionResult> UploadImage(Guid recipeId, [FromForm] ImageUploadDto imageUploadDto)
         {
             try
@@ -332,8 +309,58 @@ namespace Cme.Recipes.Controllers
             }
         }
 
-    }
+        [HttpDelete("{recipeId}/image")]
+        public async Task<IActionResult> DeleteImage(Guid recipeId)
+        {
+            try
+            {
+                var recipeToDelete = _recipeService.GetRecipe(recipeId);
+                if(recipeToDelete == null)
+                {
+                    return NotFound("recipe not found");
+                }
+                var deletedImageResult = await _uploadService.DeleteImage(recipeId);
+                if (!deletedImageResult)
+                {
+                    return BadRequest("Error deleting image");
+                }
+                return NoContent();
+                   
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
+        [HttpPut("{recipeId}/image")]
+        public async Task<IActionResult> UpdateImage(Guid recipeId, [FromForm] ImageUploadDto imageUploadDto)
+        {
+            try
+            {
+                var recipe = _recipeService.GetRecipe(recipeId);
+                if(recipe == null)
+                {
+                    return NotFound("Recipe not found");
+                }
+                if (imageUploadDto.Image == null)
+                    return BadRequest("No image uploaded.");
+
+                var image = await _uploadService.UpdateImage(recipeId, imageUploadDto.Image);
+
+                if (image == null)
+                    return StatusCode(500, "An error occurred while uploading the image.");
+
+                return Ok(image);
+            }
+
+            catch (Exception ex)
+            {
+                return BadRequest(ex.InnerException);
+            }
+        }
+
+    }
 }
 
 

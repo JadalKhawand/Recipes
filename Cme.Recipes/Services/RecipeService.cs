@@ -21,28 +21,34 @@ namespace Cme.Recipes.Services
             _mapper = mapper;
         }
 
-        public List<AllRecipesOutputDto> GetAllRecipes()
-        {
-           // List<Recipe> recipes = _context.Recipes.FromSqlRaw("EXECUTE GetAllRecipes").ToList();
-           List<Recipe> recipes = _context.Recipes.Include(r=>r.Ingredients).Include(r=>r.Image).ToList();
-            List<AllRecipesOutputDto> outputRecipes = _mapper.Map<List<AllRecipesOutputDto>>(recipes);
 
-            return outputRecipes;
-
-        }
-
-        public List<RecipeOutputDto> GetAllRecipesPaginated(int page = 1, int pageSize = 3)
+        public List<AllRecipesOutputDto> GetAllRecipesPaginated(int page = 1, int pageSize = 3)
         {
             int skipAmount = (page - 1) * pageSize;
 
-            List<Recipe> recipes = _context.Recipes
+            List<Recipe> recipes = null;
+
+            if (page == 1)
+            {
+                recipes = _context.Recipes
                 .Include(r => r.Ingredients)
                 .Include(r => r.Image)
-                .Skip(skipAmount)    
-                .Take(pageSize) 
+                .Skip(skipAmount)
+                .Take(pageSize - 1)
                 .ToList();
+            }
+            else
+            {
+                recipes = _context.Recipes
+                 .Include(r => r.Ingredients)
+                 .Include(r => r.Image)
+                 .Skip(skipAmount)
+                 .Take(pageSize)
+                 .ToList();
+            }
 
-            List<RecipeOutputDto> outputRecipes = _mapper.Map<List<RecipeOutputDto>>(recipes);
+
+            List<AllRecipesOutputDto> outputRecipes = _mapper.Map<List<AllRecipesOutputDto>>(recipes);
 
             return outputRecipes;
         }
@@ -60,7 +66,7 @@ namespace Cme.Recipes.Services
             return outputRecipe;
         }
 
-        public List<Ingredient> CreateIngredient(Guid id, List<IngredientInputDto> ingredientInputDto)
+        public async Task<List<Ingredient>> CreateIngredient(Guid id, List<IngredientInputDto> ingredientInputDto)
         {
             var ingredients = _mapper.Map<List<Ingredient>>(ingredientInputDto);
 
@@ -70,7 +76,7 @@ namespace Cme.Recipes.Services
                 ingredient.RecipeId = id;
                 _context.Ingredients.Add(ingredient);
             }
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return ingredients;
         }
 
@@ -94,34 +100,29 @@ namespace Cme.Recipes.Services
             return recipe;
         }
 
-        public bool DeleteRecipe(Guid id)
+        public async Task<bool> DeleteRecipe(Guid id)
         {
-            try
-            {
+            
                 var recipe = _context.Recipes.FirstOrDefault(u => u.RecipeId == id);
                 var ingredients = _context.Ingredients.Where(u => u.RecipeId == id).ToList();
                 if (recipe == null)
                     return false;
                 _context.Ingredients.RemoveRange(ingredients);
                 _context.Recipes.Remove(recipe);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return true;
-            }
-            catch
-            {
-                return false;
-            }
+            
         }
         public List<IngredientOutputDto> GetIngredients(Guid RecipeId)
         {
-            List<Ingredient> ingredients = _context.Ingredients.Where(r=> r.RecipeId == RecipeId).ToList();
+            List<Ingredient> ingredients = _context.Ingredients.Where(r => r.RecipeId == RecipeId).ToList();
             List<IngredientOutputDto> outputIngredients = _mapper.Map<List<IngredientOutputDto>>(ingredients);
             return outputIngredients;
         }
 
         public IngredientOutputDto GetIngredient(Guid ingredientId)
         {
-            if(ingredientId == Guid.Empty)
+            if (ingredientId == Guid.Empty)
             {
                 throw new Exception("ingredient id is required");
             }
@@ -131,8 +132,8 @@ namespace Cme.Recipes.Services
             var outputIngredient = _mapper.Map<IngredientOutputDto>(ingredient);
             return outputIngredient;
         }
-        
-        public Recipe UpdateRecipe(Guid id, RecipeInputDto recipeDto)
+
+        public async Task<Recipe> UpdateRecipe(Guid id, RecipeInputDto recipeDto)
         {
 
             var existingRecipe = _context.Recipes.FirstOrDefault(c => c.RecipeId == id);
@@ -141,26 +142,27 @@ namespace Cme.Recipes.Services
 
             var updatedRecipe = _mapper.Map(recipeDto, existingRecipe);
             _context.Recipes.Update(updatedRecipe);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return updatedRecipe;
 
         }
-        
-        public Ingredient UpdateIngredient(Guid ingredientId, IngredientInputDto ingredientInputDto)
+
+        public async Task<Ingredient> UpdateIngredient(Guid ingredientId, IngredientInputDto ingredientInputDto)
         {
-            var existingIngredient = _context.Ingredients.FirstOrDefault(i=>i.IngredientId == ingredientId);
+            var existingIngredient = _context.Ingredients.FirstOrDefault(i => i.IngredientId == ingredientId);
             if (existingIngredient == null)
                 throw new Exception("recipe not found");
 
             var updatedIngredient = _mapper.Map(ingredientInputDto, existingIngredient);
             _context.Ingredients.Update(updatedIngredient);
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+
 
             return updatedIngredient;
         }
 
-        public bool DeleteIngredient(Guid id)
+        public async Task<bool> DeleteIngredient(Guid id)
         {
             try
             {
@@ -168,7 +170,7 @@ namespace Cme.Recipes.Services
                 if (ingredient == null)
                     return false;
                 _context.Ingredients.Remove(ingredient);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return true;
             }
             catch
@@ -177,33 +179,76 @@ namespace Cme.Recipes.Services
             }
         }
 
-        public async Task<List<AllRecipesOutputDto>> SearchRecipesByName(string partialName)
+        public async Task<List<AllRecipesOutputDto>> SearchRecipesByName(string partialName, int page = 1, int pageSize = 3)
         {
-            var recipes = await _context.Recipes
-                .Where(r => r.Name.ToLower().StartsWith(partialName.ToLower())).Include(r => r.Ingredients).Include(r => r.Image)
+            int skipAmount = (page - 1) * pageSize;
+
+            List<Recipe> recipes = null;
+            if (page == 1)
+            {
+                recipes = await _context.Recipes
+                .Where(r => EF.Functions.Like(r.Name, $"%{partialName}%")).Include(r => r.Image).Skip(skipAmount)
+                .Take(pageSize - 1)
                 .ToListAsync();
+            }
+            else
+            {
+                recipes = await _context.Recipes
+                .Where(r => EF.Functions.Like(r.Name, $"%{partialName}%")).Include(r => r.Image).Skip(skipAmount)
+                .Take(pageSize)
+                .ToListAsync();
+            }
+
             List<AllRecipesOutputDto> outputRecipes = _mapper.Map<List<AllRecipesOutputDto>>(recipes);
             return outputRecipes;
+
         }
 
-        public async Task<List<AllRecipesOutputDto>> GetRecipesByCategory(string category)
+        public async Task<List<AllRecipesOutputDto>> GetRecipesByCategory(string category, int page = 1, int pageSize = 3)
         {
-            var recipes = await _context.Recipes
-                .Where(r => r.Category.ToLower() == category.ToLower()).Include(r => r.Ingredients).Include(r => r.Image)
-                .ToListAsync();
-            List<AllRecipesOutputDto> outputRecipes = _mapper.Map<List<AllRecipesOutputDto>>(recipes);
-            return outputRecipes;
-        }
-        public async Task<List<AllRecipesOutputDto>> SearchRecipesByNameAndCategory(string partialName, string category)
-        {
-            var recipes = await _context.Recipes
-               .Where(r => r.Name.ToLower().StartsWith(partialName.ToLower()) && 
-                r.Category.ToLower() == category.ToLower()).Include(r => r.Ingredients).Include(r => r.Image)
+            int skipAmount = (page - 1) * pageSize;
+            List<Recipe> recipes = null;
+            if (page == 1)
+            {
+                recipes = await _context.Recipes
+                   .Where(r => r.Category.ToLower() == category.ToLower()).Include(r => r.Image).Skip(skipAmount)
+                   .Take(pageSize - 1)
+                   .ToListAsync();
+            }
+            else
+            {
+                recipes = await _context.Recipes
+               .Where(r => r.Category.ToLower() == category.ToLower()).Include(r => r.Image).Skip(skipAmount)
+               .Take(pageSize)
                .ToListAsync();
+            }
+
             List<AllRecipesOutputDto> outputRecipes = _mapper.Map<List<AllRecipesOutputDto>>(recipes);
             return outputRecipes;
         }
-        public bool UpdateRecipe(Guid id, JsonPatchDocument<RecipeInputDto> patchDto)
+        public async Task<List<AllRecipesOutputDto>> SearchRecipesByNameAndCategory(string partialName, string category, int page = 1, int pageSize = 3)
+        {
+            int skipAmount = (page - 1) * pageSize;
+            List<Recipe> recipes = null;
+
+            if (page == 1)
+            {
+                recipes = await _context.Recipes
+               .Where(r => r.Category.ToLower() == category.ToLower() && EF.Functions.Like(r.Name, $"%{partialName}%")).Include(r => r.Image).Skip(skipAmount)
+                .Take(pageSize - 1)
+               .ToListAsync();
+            }
+            else
+            {
+                recipes = await _context.Recipes
+               .Where(r => r.Category.ToLower() == category.ToLower() && EF.Functions.Like(r.Name, $"%{partialName}%")).Include(r => r.Image).Skip(skipAmount)
+                .Take(pageSize)
+               .ToListAsync();
+            }
+            List<AllRecipesOutputDto> outputRecipes = _mapper.Map<List<AllRecipesOutputDto>>(recipes);
+            return outputRecipes;
+        }
+        public async Task<bool> UpdateRecipe(Guid id, JsonPatchDocument<RecipeInputDto> patchDto)
         {
             try
             {
@@ -214,7 +259,7 @@ namespace Cme.Recipes.Services
                 var recipeDto = _mapper.Map<RecipeInputDto>(recipe);
                 patchDto.ApplyTo(recipeDto);
                 _mapper.Map(recipeDto, recipe);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return true;
             }
             catch

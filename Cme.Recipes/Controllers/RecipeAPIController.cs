@@ -235,6 +235,7 @@ namespace Cme.Recipes.Controllers
         public async Task<IActionResult> SearchRecipesByNameAndCategory([FromQuery] string name = "", [FromQuery] string category = "")
         {
             List<RecipeOutputDto> recipes = null;
+            List<AllRecipesOutputDto> outputrecipes = null;
 
             if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(category))
             {
@@ -250,10 +251,10 @@ namespace Cme.Recipes.Controllers
             }
             else
             {
-                recipes = _recipeService.GetAllRecipes();
+                outputrecipes = _recipeService.GetAllRecipes();
             }
 
-            if (recipes == null || recipes.Count == 0)
+            if (recipes == null || recipes.Count == 0 || outputrecipes == null)
             {
                 if (!string.IsNullOrEmpty(name) && string.IsNullOrEmpty(category))
                 {
@@ -268,8 +269,11 @@ namespace Cme.Recipes.Controllers
                     return NotFound("No recipes found.");
                 }
             }
+            if (recipes != null) {
+                return Ok(recipes);
+            }
 
-            return Ok(recipes);
+            return Ok(outputrecipes);
         }
 
 

@@ -21,11 +21,11 @@ namespace Cme.Recipes.Services
             _mapper = mapper;
         }
 
-        public List<RecipeOutputDto> GetAllRecipes()
+        public List<AllRecipesOutputDto> GetAllRecipes()
         {
            // List<Recipe> recipes = _context.Recipes.FromSqlRaw("EXECUTE GetAllRecipes").ToList();
            List<Recipe> recipes = _context.Recipes.Include(r=>r.Ingredients).Include(r=>r.Image).ToList();
-            List<RecipeOutputDto> outputRecipes = _mapper.Map<List<RecipeOutputDto>>(recipes);
+            List<AllRecipesOutputDto> outputRecipes = _mapper.Map<List<AllRecipesOutputDto>>(recipes);
 
             return outputRecipes;
 
@@ -177,30 +177,30 @@ namespace Cme.Recipes.Services
             }
         }
 
-        public async Task<List<RecipeOutputDto>> SearchRecipesByName(string partialName)
+        public async Task<List<AllRecipesOutputDto>> SearchRecipesByName(string partialName)
         {
             var recipes = await _context.Recipes
                 .Where(r => r.Name.ToLower().StartsWith(partialName.ToLower())).Include(r => r.Ingredients).Include(r => r.Image)
                 .ToListAsync();
-            List<RecipeOutputDto> outputRecipes = _mapper.Map<List<RecipeOutputDto>>(recipes);
+            List<AllRecipesOutputDto> outputRecipes = _mapper.Map<List<AllRecipesOutputDto>>(recipes);
             return outputRecipes;
         }
 
-        public async Task<List<RecipeOutputDto>> GetRecipesByCategory(string category)
+        public async Task<List<AllRecipesOutputDto>> GetRecipesByCategory(string category)
         {
             var recipes = await _context.Recipes
                 .Where(r => r.Category.ToLower() == category.ToLower()).Include(r => r.Ingredients).Include(r => r.Image)
                 .ToListAsync();
-            List<RecipeOutputDto> outputRecipes = _mapper.Map<List<RecipeOutputDto>>(recipes);
+            List<AllRecipesOutputDto> outputRecipes = _mapper.Map<List<AllRecipesOutputDto>>(recipes);
             return outputRecipes;
         }
-        public async Task<List<RecipeOutputDto>> SearchRecipesByNameAndCategory(string partialName, string category)
+        public async Task<List<AllRecipesOutputDto>> SearchRecipesByNameAndCategory(string partialName, string category)
         {
             var recipes = await _context.Recipes
                .Where(r => r.Name.ToLower().StartsWith(partialName.ToLower()) && 
                 r.Category.ToLower() == category.ToLower()).Include(r => r.Ingredients).Include(r => r.Image)
                .ToListAsync();
-            List<RecipeOutputDto> outputRecipes = _mapper.Map<List<RecipeOutputDto>>(recipes);
+            List<AllRecipesOutputDto> outputRecipes = _mapper.Map<List<AllRecipesOutputDto>>(recipes);
             return outputRecipes;
         }
         public bool UpdateRecipe(Guid id, JsonPatchDocument<RecipeInputDto> patchDto)

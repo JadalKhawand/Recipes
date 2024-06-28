@@ -108,6 +108,95 @@ namespace CmeRecipe.Test.Controllers
             // Assert
             Assert.IsType<BadRequestObjectResult>(result);
         }
+        [Fact]
+        public async Task RecipeApiController_GetAllIngredients_ReturnsOK()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            fixture.Customize(new AutoNSubstituteCustomization());
+
+            var fakeIngredients = fixture.CreateMany<IngredientOutputDto>(3).ToList();
+
+
+            var recipeService = Substitute.For<IRecipeService>();
+            var FileUploadService = Substitute.For<IFileUploadService>();
+            recipeService.GetIngredients().Returns(fakeIngredients);
+
+            var controller = new RecipeAPIController(recipeService,FileUploadService);
+
+            // Act
+            var result = await controller.GetAllRecipes("","",1,3);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var okObjectResult = (OkObjectResult)result;
+            var recipes = Assert.IsAssignableFrom<List<AllRecipesOutputDto>>(okResult.Value);
+            var count = recipes.Count;
+            Assert.Equal(3, count);
+        }
+
+        [Fact]
+        public void RecipeApiController_GetAllIngredients_ReturnsNotFound()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            fixture.Customize(new AutoNSubstituteCustomization());
+
+            var fakeRecipes = fixture.CreateMany<AllRecipesOutputDto>(3).ToList();
+
+
+            var recipeService = Substitute.For<IRecipeService>();
+            var FileUploadService = Substitute.For<IFileUploadService>();
+            recipeService.GetAllRecipesPaginated(2, 3).Returns(fakeRecipes);
+
+            var controller = new RecipeAPIController(recipeService, FileUploadService);
+
+            // Act
+            var result = controller.GetAllRecipes();
+
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+        }
+
+        
+
+        [Fact]
+        public async Task RecipeApiController_GetAllIngredients_ReturnsBadRequestForNegativePageSize()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            fixture.Customize(new AutoNSubstituteCustomization());
+
+            var recipeService = Substitute.For<IRecipeService>();
+            var fileUploadService = Substitute.For<IFileUploadService>();
+
+            var controller = new RecipeAPIController(recipeService, fileUploadService);
+
+            // Act
+            var result = await controller.GetAllRecipes(pageNumber: 1, pageSize: -1); 
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task RecipeApiController_GetAllIngredients_ReturnsBadRequestForNegativePageNumber()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            fixture.Customize(new AutoNSubstituteCustomization());
+
+            var recipeService = Substitute.For<IRecipeService>();
+            var fileUploadService = Substitute.For<IFileUploadService>();
+
+            var controller = new RecipeAPIController(recipeService, fileUploadService);
+
+            // Act
+            var result = await controller.GetAllRecipes(pageNumber: -1, pageSize: 10); 
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
     
 
     [Fact]

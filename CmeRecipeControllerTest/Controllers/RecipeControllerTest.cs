@@ -13,13 +13,14 @@ using Cme.Recipes.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using System.Web.Http.Results;
 
 namespace CmeRecipe.Test.Controllers
 {
     public class RecipeControllerTest
     {
         [Fact]
-        public void RecipeApiController_GetAllRecipes_ReturnsOK()
+        public async Task RecipeApiController_GetAllRecipes_ReturnsOK()
         {
             // Arrange
             var fixture = new Fixture();
@@ -35,13 +36,14 @@ namespace CmeRecipe.Test.Controllers
             var controller = new RecipeAPIController(recipeService,FileUploadService);
 
             // Act
-            var result = controller.GetAllRecipes();
+            var result = await controller.GetAllRecipes("","",1,3);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var recipes = Assert.IsAssignableFrom<List<RecipeOutputDto>>(okResult.Value);
+            var okObjectResult = (OkObjectResult)result;
+            var recipes = Assert.IsAssignableFrom<List<AllRecipesOutputDto>>(okResult.Value);
             var count = recipes.Count;
-            Assert.Equal(2, count);
+            Assert.Equal(3, count);
         }
 
         [Fact]
@@ -153,7 +155,7 @@ namespace CmeRecipe.Test.Controllers
             var result = await controller.CreateRecipe(null);
 
             // Assert
-            Assert.IsType<BadRequestResult>(result.Result);
+            Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestResult>(result.Result);
         }
 
         /* [Fact]
@@ -186,7 +188,7 @@ namespace CmeRecipe.Test.Controllers
          }*/
 
         [Fact]
-        public void RecipeApiController_DeleteRecipe_ReturnsNoContent()
+        public async void RecipeApiController_DeleteRecipe_ReturnsNoContent()
         {
             // Arrange
             var fixture = new Fixture();
@@ -194,7 +196,6 @@ namespace CmeRecipe.Test.Controllers
 
             var id = Guid.NewGuid();
             var recipeToDelete = fixture.Create<RecipeOutputDto>();
-            var updatedrecipe = fixture.Create<Recipe>();
             var recipeService = Substitute.For<IRecipeService>();
             var FileUploadService = Substitute.For<IFileUploadService>();
 
@@ -204,14 +205,14 @@ namespace CmeRecipe.Test.Controllers
             var controller = new RecipeAPIController(recipeService, FileUploadService);
 
             // Act
-            var result = controller.DeleteRecipe(id);
+            var result = await controller.DeleteRecipe(id);
 
             // Assert
-            Assert.IsType<NoContentResult>(result);
+            Assert.IsType<NoContentResult>(result.Result);
         }
 
         [Fact]
-        public void RecipeApiController_DeleteRecipe_NonExistingRecipe_ReturnsNotFound()
+        public async void RecipeApiController_DeleteRecipe_NonExistingRecipe_ReturnsNotFound()
         {
             // Arrange
             var fixture = new Fixture();
@@ -227,14 +228,14 @@ namespace CmeRecipe.Test.Controllers
 
 
             // Act
-            var result = controller.DeleteRecipe(id);
+            var result = await controller.DeleteRecipe(id);
 
             // Assert
-            Assert.IsType<NotFoundObjectResult>(result);
+            Assert.IsType<NotFoundObjectResult>(result.Result);
         }
 
         [Fact]
-        public void RecipeApiController_DeleteRecipe_FailureToDelete_ReturnsBadRequest()
+        public async void RecipeApiController_DeleteRecipe_FailureToDelete_ReturnsBadRequest()
         {
             // Arrange
             var fixture = new Fixture();
@@ -251,7 +252,7 @@ namespace CmeRecipe.Test.Controllers
             var controller = new RecipeAPIController(recipeService, FileUploadService);
 
             // Act
-            var result = controller.DeleteRecipe(id);
+            var result = await controller.DeleteRecipe(id);
 
             // Assert
             Assert.IsType<BadRequestObjectResult>(result.Result);
